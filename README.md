@@ -20,4 +20,12 @@
 |10|`source ~/.profile`|
 |11|`go version`|
 
+nano .bashrc
+````
+GOROOT=/usr/local/bin/go
+GOPATH=$HOME/go
+export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+````
+
+
 https://qiita.com/osk_kamui/items/1539ade3c23f58b89f80
