@@ -1,7 +1,10 @@
 # MySQL
 
+## kubectl exec -it mysql-8fd6bcc98-w74k2 -n wildwest  bash
 
-## kubctl exec -it mysql-8fd6bcc98-w74k2 -n wildwest -- mysql -u root --password=ThisIsCool webapp -e 'select * from users'
+### mysql -u root --password=ThisIsCool
+
+## kubectl exec -it mysql-8fd6bcc98-w74k2 -n wildwest -- mysql -u root --password=ThisIsCool webapp -e 'select * from users'
 
 ````
 
@@ -69,4 +72,107 @@ func main() {
 ````
 boscp08@boscp08-dingo:~/.../Go$ go run main.go 
 2020/04/24 18:09:33 Error 1044: Access denied for user 'root'@'192.168.0.0' to database 'webapp'
+````
+
+
+#  Grant access by editing /etc/mysql/mysql.conf.d/mysqld.cnf 
+Grant access by editing /etc/mysql/mysql.conf.d/mysqld.cnf ```` Disable the line with bind```
+http://dev.mysql.com/doc/mysql/en/server-system-variables.html
+
+
+```` Disable the line with bind````
+
+````
+[mysqld]    
+bind-address = 0.0.0.0
+````
+## kubectl delete -f mysql.yaml
+````
+pi@k8s-head:~/mysql $ kubectl delete -f mysql.yaml
+secret "mysql" deleted
+deployment.apps "mysql" deleted
+service "mysqlserver" deleted
+
+````
+
+````
+pi@k8s-head:~/mysql $ cat mysql.yaml
+#echo -n "passwd1" | base64
+#
+##echo -n "ThisIsCool" |base64
+##VGhpc0lzQ29vbA==
+#
+#apiVersion: v1
+#kind: Namespace
+#metadata:
+#  name: student34
+#---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql
+  namespace: wildwest
+type: Opaque
+data:
+  password: VGhpc0lzQ29vbA==
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: wildwest
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - image: mysql:5.6
+          name: mysql
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-persistent-storage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysql-persistent-storage
+          persistentVolumeClaim:
+          emptyDir: {}
+          #claimName: mysql-server
+      nodeSelector:
+         processortype: amd
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysqlserver
+  namespace: wildwest
+  labels:
+    k8s-app: mysql-server
+spec:
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+    protocol: TCP
+    name: http
+  externalIPs:
+    - 192.168.2.30
+
 ````
